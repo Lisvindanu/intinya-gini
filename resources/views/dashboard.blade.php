@@ -38,8 +38,8 @@
                 </div>
             @endif
 
-            {{-- Generate New Script Card (10% - Accent) --}}
-            <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+            {{-- Generate New Script Card --}}
+            <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200" x-data="{ generating: false }">
                 <div class="bg-blue-600 px-6 py-4">
                     <h3 class="text-xl font-bold text-white flex items-center gap-2">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,8 @@
                 </div>
                 
                 <div class="p-6 bg-gray-50">
-                    <form action="{{ route('scripts.generate') }}" method="POST" class="space-y-4">
+                    <form action="{{ route('scripts.generate') }}" method="POST" class="space-y-4"
+                          @submit="generating = true; $el.querySelector('button[type=submit]').disabled = true">
                         @csrf
                         <div>
                             <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -64,6 +65,7 @@
                                 required
                                 placeholder="Contoh: GPT-5 Bakal Rilis Tahun Ini, Apa Bedanya?"
                                 class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 transition-all"
+                                :disabled="generating"
                             >
                         </div>
                         
@@ -80,6 +82,7 @@
                                     min="30"
                                     max="120"
                                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                    :disabled="generating"
                                 >
                             </div>
                             
@@ -91,6 +94,7 @@
                                     name="prompt_style" 
                                     id="prompt_style"
                                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                    :disabled="generating"
                                 >
                                     <option value="">Auto-detect</option>
                                     <option value="tldr_v1">General / Default</option>
@@ -102,18 +106,27 @@
                         
                         <button 
                             type="submit"
-                            class="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                            class="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                            :class="{ 'opacity-75': generating }"
                         >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg x-show="!generating" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
-                            Generate Script
+                            <svg x-show="generating" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="generating ? 'Generating... (Bisa sampai 5 menit)' : 'Generate Script'"></span>
                         </button>
+                        
+                        <p x-show="generating" class="text-center text-sm text-gray-600 animate-pulse">
+                            ⏳ AI sedang bekerja... Mohon tunggu, proses bisa memakan waktu 1-5 menit
+                        </p>
                     </form>
                 </div>
             </div>
 
-            {{-- Scripts List (30% - Secondary Surface) --}}
+            {{-- Scripts List --}}
             <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
                 <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
                     <h3 class="text-lg font-bold text-gray-800">
