@@ -1,154 +1,198 @@
-@extends("layouts.app")
-
-@section("title", $script->title . " - Intinya Gini")
-
-@section("content")
-<div class="max-w-4xl mx-auto">
-    <div class="mb-6 flex justify-between items-center">
-        <a href="{{ route("scripts.index") }}" class="text-accent hover:text-green-400 text-sm">
-            ← Kembali
-        </a>
-        
-        @if($script->parent_script_id || $script->hasVariations())
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{{ route('dashboard') }}" class="text-gray-400 hover:text-gray-300 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                </a>
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 dark:text-gray-100 leading-tight">
+                        Script Detail
+                    </h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {{ $script->topic->title }}
+                    </p>
+                </div>
+            </div>
+            
             <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Versi {{ $script->version }}</span>
-                @if($script->variation_type !== "original")
-                    <span class="px-2 py-1 bg-blue-900/50 text-blue-200 text-xs rounded">
-                        {{ ucfirst(str_replace("_", " ", $script->variation_type)) }}
+                <span class="px-3 py-1 bg-blue-600 text-white text-sm font-bold rounded-full">
+                    Versi {{ $script->version }}
+                </span>
+                @if($script->variation_type !== 'original')
+                    <span class="px-3 py-1 bg-purple-600 text-white text-sm rounded-full">
+                        {{ ucfirst(str_replace('_', ' ', $script->variation_type)) }}
                     </span>
                 @endif
             </div>
-        @endif
-    </div>
-
-    <div class="bg-gray-900 rounded-lg border border-gray-800 p-8">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-white mb-2">{{ $script->title }}</h1>
-            <p class="text-gray-400">{{ $script->topic->title }} • {{ $script->topic->duration }} detik</p>
         </div>
+    </x-slot>
 
-        @if($script->hasVariations())
-            <div class="mb-6 p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-blue-200 text-sm font-semibold">
-                            📊 Script ini punya {{ $script->variations->count() }} variasi
-                        </p>
-                        <p class="text-blue-300/70 text-xs mt-1">
-                            Klik tombol untuk lihat semua versi
-                        </p>
+    <div class="py-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            
+            {{-- Variations Alert --}}
+            @if($script->hasVariations())
+                <div class="bg-purple-900/20 border border-purple-700 rounded-xl p-5">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-purple-200 font-semibold mb-2">
+                                Script ini punya {{ $script->variations->count() }} variasi lainnya
+                            </p>
+                            <a href="{{ route('scripts.variations', $script->id) }}" 
+                               class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg transition-colors">
+                                Lihat {{ $script->variations->count() }} Variasi
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </a>
+                        </div>
                     </div>
-                    <a 
-                        href="{{ route("scripts.variations", $script->id) }}"
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                    >
-                        Lihat {{ $script->variations->count() }} Variasi
-                    </a>
                 </div>
-            </div>
-        @endif
+            @endif
 
-        <div class="space-y-6">
-            <div>
-                <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-2">Hook</h3>
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <p class="text-gray-200">{{ $script->hook }}</p>
+            {{-- Main Content Card --}}
+            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                
+                {{-- Hook Section --}}
+                <div class="border-b border-gray-200 dark:border-gray-700 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                        <span class="text-2xl">🎯</span>
+                        HOOK
+                    </h3>
+                    <p class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-relaxed">
+                        {{ $script->hook }}
+                    </p>
                 </div>
-            </div>
 
-            <div>
-                <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-2">Script TL;DR</h3>
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <p class="text-gray-200 leading-relaxed">{{ $script->content }}</p>
+                {{-- Script Content --}}
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                        <span class="text-2xl">📝</span>
+                        SCRIPT
+                    </h3>
+                    <div class="prose dark:prose-invert max-w-none">
+                        <p class="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line">{{ $script->content }}</p>
+                    </div>
                 </div>
-            </div>
 
-            <div>
-                <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-2">Poin Inti</h3>
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <ol class="space-y-2">
-                        @foreach($script->key_points as $index => $point)
-                            <li class="text-gray-200">
-                                <span class="font-bold text-accent">{{ $index + 1 }}.</span> {{ $point }}
+                {{-- Key Points --}}
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-4 flex items-center gap-2">
+                        <span class="text-2xl">💡</span>
+                        POIN INTI
+                    </h3>
+                    <ul class="space-y-3">
+                        @php
+                            $keyPoints = is_string($script->key_points) 
+                                ? json_decode($script->key_points, true) 
+                                : $script->key_points;
+                        @endphp
+                        
+                        @foreach($keyPoints ?? [] as $point)
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {{ $loop->iteration }}
+                                </span>
+                                <span class="text-gray-800 dark:text-gray-200 leading-relaxed">{{ $point }}</span>
                             </li>
                         @endforeach
-                    </ol>
+                    </ul>
+                </div>
+
+                {{-- YouTube Title --}}
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                        <span class="text-2xl">🎬</span>
+                        JUDUL YOUTUBE SHORTS
+                    </h3>
+                    <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {{ $script->title }}
+                    </p>
+                </div>
+
+                {{-- Caption --}}
+                <div class="p-6">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 flex items-center gap-2">
+                        <span class="text-2xl">📱</span>
+                        CAPTION
+                    </h3>
+                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">{{ $script->caption }}</p>
                 </div>
             </div>
 
-            <div>
-                <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-2">Caption</h3>
-                <div class="bg-gray-800 rounded-lg p-4">
-                    <p class="text-gray-200">{{ $script->caption }}</p>
+            {{-- Regenerate Section --}}
+            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div class="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Generate Variasi Baru
+                    </h3>
+                    <p class="text-purple-100 text-sm mt-1">Coba prompt yang berbeda untuk hasil yang bervariasi</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {{-- Default Regenerate --}}
+                        <form action="{{ route('scripts.regenerate', $script->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="prompt_name" value="tldr_v1">
+                            <button type="submit" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 flex flex-col items-center gap-2">
+                                <span class="text-2xl">🔄</span>
+                                <span class="text-sm">Regenerate</span>
+                                <span class="text-xs opacity-80">(Default)</span>
+                            </button>
+                        </form>
+                        
+                        {{-- Drama Variation --}}
+                        <form action="{{ route('scripts.regenerate', $script->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="prompt_name" value="tldr_drama">
+                            <button type="submit" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 flex flex-col items-center gap-2">
+                                <span class="text-2xl">🎭</span>
+                                <span class="text-sm">Versi Drama</span>
+                                <span class="text-xs opacity-80">(Extra Neutral)</span>
+                            </button>
+                        </form>
+                        
+                        {{-- Tech Variation --}}
+                        <form action="{{ route('scripts.regenerate', $script->id) }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="prompt_name" value="tldr_tech">
+                            <button type="submit" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95 flex flex-col items-center gap-2">
+                                <span class="text-2xl">💻</span>
+                                <span class="text-sm">Versi Tech</span>
+                                <span class="text-xs opacity-80">(Explain)</span>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+                        💡 Setiap variasi akan disimpan dan bisa lu bandingkan nanti
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <div class="mt-8 pt-6 border-t border-gray-800">
-            <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-4">Generate Variasi Baru</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <form action="{{ route("scripts.regenerate", $script->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm">
-                        🔄 Regenerate (Default)
-                    </button>
-                </form>
-
-                <form action="{{ route("scripts.regenerate", $script->id) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="prompt_name" value="tldr_drama">
-                    <button type="submit" class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm">
-                        🎭 Versi Drama/Netral
-                    </button>
-                </form>
-
-                <form action="{{ route("scripts.regenerate", $script->id) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="prompt_name" value="tldr_tech">
-                    <button type="submit" class="w-full px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg transition-colors text-sm">
-                        💻 Versi Tech/Explain
-                    </button>
-                </form>
-            </div>
-            <p class="text-xs text-gray-500 mt-2">
-                Generate variasi baru dengan gaya yang berbeda. Semua versi akan disimpan sebagai riwayat.
-            </p>
-        </div>
-
-        <div class="mt-6 pt-6 border-t border-gray-800" x-data="{ copied: false }">
-            <h3 class="text-sm font-semibold text-accent uppercase tracking-wide mb-4">Export</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button
-                    @click="navigator.clipboard.writeText("{{ addslashes($script->content) }}"); copied = true; setTimeout(() => copied = false, 2000)"
-                    class="px-4 py-2 bg-accent hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
-                >
-                    <span x-show="!copied">Copy Script</span>
-                    <span x-show="copied">Copied!</span>
-                </button>
-
-                <a href="{{ route("scripts.export", [$script->id, "text"]) }}" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-center rounded-lg transition-colors text-sm">
-                    Download TXT
+            {{-- Export & Actions --}}
+            <div class="flex gap-3">
+                <a href="{{ route('scripts.export', [$script->id, 'txt']) }}" 
+                   class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-center">
+                    📄 Export TXT
                 </a>
-
-                <a href="{{ route("scripts.export", [$script->id, "markdown"]) }}" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-center rounded-lg transition-colors text-sm">
-                    Download MD
-                </a>
-
-                <a href="{{ route("scripts.export", [$script->id, "srt"]) }}" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-center rounded-lg transition-colors text-sm">
-                    Download SRT
+                <a href="{{ route('scripts.export', [$script->id, 'json']) }}" 
+                   class="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors text-center">
+                    📊 Export JSON
                 </a>
             </div>
-        </div>
-
-        <div class="mt-6 pt-6 border-t border-gray-800">
-            <form action="{{ route("scripts.destroy", $script->id) }}" method="POST" onsubmit="return confirm("Yakin mau hapus script ini?")">
-                @csrf
-                @method("DELETE")
-                <button type="submit" class="px-4 py-2 bg-red-900/50 hover:bg-red-900 text-red-200 rounded-lg transition-colors text-sm">
-                    Hapus Script
-                </button>
-            </form>
         </div>
     </div>
-</div>
-@endsection
+</x-app-layout>
