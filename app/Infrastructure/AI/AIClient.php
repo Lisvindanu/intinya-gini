@@ -7,39 +7,33 @@ use Illuminate\Support\Facades\Log;
 
 class AIClient
 {
-    private string $apiKey;
     private string $baseUrl;
     private string $model;
 
     public function __construct()
     {
-        $this->apiKey = config('services.openrouter.api_key');
-        $this->baseUrl = config('services.openrouter.base_url', 'https://openrouter.ai/api/v1');
-        $this->model = config('services.openrouter.model', 'meta-llama/llama-3.1-8b-instruct:free');
+        // Use local Ollama instead of OpenRouter
+        $this->baseUrl = config('services.ollama.base_url', 'http://127.0.0.1:11434');
+        $this->model = config('services.ollama.model', 'gemma:2b');
     }
 
     public function generate(string $prompt): array
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'HTTP-Referer' => config('app.url'),
-                'X-Title' => 'Intinya Gini - AI TL;DR Factory',
-                'Content-Type' => 'application/json',
-            ])->timeout(60)->post($this->baseUrl . '/chat/completions', [
+            $response = Http::timeout(180)->post($this->baseUrl . '/api/generate', [
                 'model' => $this->model,
-                'messages' => [
-                    [
-                        'role' => 'user',
-                        'content' => $prompt,
-                    ],
+                'prompt' => $prompt,
+                'stream' => false,
+                'options' => [
+                    'temperature' => 0.7,
+                    'num_predict' => 400,      // Cukup untuk full JSON output (~350 tokens)
+                    'num_ctx' => 2048,          // Batasi context window (hemat RAM)
+                    'num_thread' => 4,          // Match vCPU cores
                 ],
-                'temperature' => 0.7,
-                'max_tokens' => 1000,
             ]);
 
             if (!$response->successful()) {
-                Log::error('OpenRouter API Error', [
+                Log::error('Ollama API Error', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
@@ -50,9 +44,9 @@ class AIClient
             $data = $response->json();
 
             return [
-                'content' => $data['choices'][0]['message']['content'] ?? '',
+                'content' => $data['response'] ?? '',
                 'model' => $data['model'] ?? $this->model,
-                'tokens' => $data['usage']['total_tokens'] ?? null,
+                'tokens' => $data['eval_count'] ?? null,
             ];
         } catch (\Exception $e) {
             Log::error('AI Client Error', [

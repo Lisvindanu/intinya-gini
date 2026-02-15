@@ -3,15 +3,27 @@
 @section('title', 'Trending Topics - Intinya Gini')
 
 @section('content')
-<div class="mb-6">
-    <h1 class="text-3xl font-bold text-white mb-2">Trending Topics</h1>
-    <p class="text-gray-400">Topik trending dari berbagai sumber untuk konten TL;DR kamu</p>
+<div class="mb-6 flex justify-between items-start">
+    <div>
+        <h1 class="text-3xl font-bold text-white mb-2">Trending Topics</h1>
+        <p class="text-gray-400">Topik trending dari berbagai sumber untuk konten TL;DR kamu</p>
+    </div>
+    
+    <form action="{{ route('trending.fetch') }}" method="POST" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Fetching...'; return true;">
+        @csrf
+        <button
+            type="submit"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors whitespace-nowrap"
+        >
+            🔄 Fetch Trending Topics
+        </button>
+    </form>
 </div>
 
 @if($trending->isEmpty())
     <div class="bg-gray-900 rounded-lg border border-gray-800 p-12 text-center">
         <p class="text-gray-400 mb-4">Belum ada trending topics yang di-fetch.</p>
-        <p class="text-sm text-gray-500">Jalankan command: <code class="bg-gray-800 px-2 py-1 rounded">php artisan trending:fetch</code></p>
+        <p class="text-sm text-gray-500 mb-6">Klik tombol "Fetch Trending Topics" di atas untuk mengambil berita terbaru</p>
     </div>
 @else
     <div class="grid grid-cols-1 gap-4">

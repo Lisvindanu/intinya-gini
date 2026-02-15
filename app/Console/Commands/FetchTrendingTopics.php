@@ -78,6 +78,10 @@ class FetchTrendingTopics extends Command
                 $source->config['category'] ?? 'technology',
                 $source->config['page_size'] ?? 20
             ),
+            'google_news' => new \App\Infrastructure\Scrapers\GoogleNewsIndonesiaScraper(
+                $source->config['category'] ?? 'NATION',
+                $source->config['limit'] ?? 20
+            ),
             default => null,
         };
     }

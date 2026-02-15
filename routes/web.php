@@ -11,4 +11,5 @@ Route::get('/scripts/{id}/export/{format}', [ScriptController::class, 'export'])
 Route::delete('/scripts/{id}', [ScriptController::class, 'destroy'])->name('scripts.destroy');
 
 Route::get('/trending', [TrendingTopicController::class, 'index'])->name('trending.index');
+Route::post('/trending/fetch', [TrendingTopicController::class, 'fetch'])->name('trending.fetch');
 Route::post('/trending/{id}/generate', [TrendingTopicController::class, 'generate'])->name('trending.generate');

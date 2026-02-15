@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Application\Actions\GenerateScriptAction;
+use App\Domain\Entities\TopicSource;
 use App\Domain\Services\TrendingTopicService;
+use App\Infrastructure\Scrapers\GoogleNewsIndonesiaScraper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -21,6 +23,63 @@ class TrendingTopicController extends Controller
         return view('trending', [
             'trending' => $trending,
         ]);
+    }
+
+    public function fetch(): RedirectResponse
+    {
+        try {
+            $sources = TopicSource::where('is_active', true)->get();
+
+            if ($sources->isEmpty()) {
+                return redirect()
+                    ->route('trending.index')
+                    ->with('error', 'Tidak ada sumber aktif. Jalankan: php artisan sources:seed');
+            }
+
+            $totalFetched = 0;
+
+            foreach ($sources as $source) {
+                $scraper = $this->getScraperForSource($source);
+
+                if (!$scraper) {
+                    continue;
+                }
+
+                $count = $this->trendingService->fetchFromSource($source, $scraper);
+                $totalFetched += $count;
+            }
+
+            // Recalculate scores
+            $this->trendingService->recalculateScores();
+
+            // Clean old topics (older than 7 days)
+            $deleted = $this->trendingService->cleanOldTopics(7);
+
+            $message = "Berhasil fetch {$totalFetched} trending topics.";
+            if ($deleted > 0) {
+                $message .= " Dihapus {$deleted} topik lama.";
+            }
+
+            return redirect()
+                ->route('trending.index')
+                ->with('success', $message);
+
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('trending.index')
+                ->with('error', 'Gagal fetch trending: ' . $e->getMessage());
+        }
+    }
+
+    private function getScraperForSource(TopicSource $source)
+    {
+        return match ($source->type) {
+            'google_news' => new GoogleNewsIndonesiaScraper(
+                $source->config['category'] ?? 'NATION',
+                $source->config['limit'] ?? 20
+            ),
+            default => null,
+        };
     }
 
     public function generate(int $id): RedirectResponse

@@ -4,6 +4,12 @@ namespace App\Domain\Services;
 
 class ScriptFormatter
 {
+    private const TAGLINE = 'Orang males baca, gue juga males. Jadi gue bacain inti paling penting doang.';
+
+    public function __construct(
+        private ScriptValidator $validator
+    ) {}
+
     public function parse(string $aiResponse): array
     {
         $cleaned = $this->cleanJsonResponse($aiResponse);
@@ -11,16 +17,47 @@ class ScriptFormatter
         try {
             $data = json_decode($cleaned, true, 512, JSON_THROW_ON_ERROR);
 
-            return [
+            $parsed = [
                 'hook' => $data['hook'] ?? '',
                 'content' => $data['content'] ?? '',
                 'key_points' => $data['key_points'] ?? [],
                 'title' => $data['title'] ?? '',
                 'caption' => $data['caption'] ?? '',
             ];
+
+            return $this->polishOutput($parsed);
+
         } catch (\JsonException $e) {
             return $this->fallbackParse($aiResponse);
         }
+    }
+
+    private function polishOutput(array $data): array
+    {
+        if (!empty($data['content']) && !str_starts_with($data['content'], self::TAGLINE)) {
+            $data['content'] = self::TAGLINE . ' ' . $data['content'];
+        }
+
+        if (!empty($data['caption']) && !str_contains($data['caption'], '#IntinyaGini')) {
+            $data['caption'] = $data['caption'] . ' #IntinyaGini';
+        }
+
+        if (!empty($data['hook'])) {
+            $data['hook'] = $this->cleanHook($data['hook']);
+        }
+
+        if (empty($data['key_points'])) {
+            $data['key_points'] = ['Informasi tidak lengkap'];
+        }
+
+        return $data;
+    }
+
+    private function cleanHook(string $hook): string
+    {
+        $hook = preg_replace('/\b(\w+)\s+\1\b/i', '$1', $hook);
+        $hook = preg_replace('/\s+/', ' ', $hook);
+        return trim($hook);
     }
 
     private function cleanJsonResponse(string $response): string
@@ -46,10 +83,10 @@ class ScriptFormatter
     {
         return [
             'hook' => 'Hook tidak tersedia',
-            'content' => $response,
+            'content' => self::TAGLINE . ' ' . $response,
             'key_points' => ['Parsing error occurred'],
             'title' => 'TL;DR Content',
-            'caption' => 'Konten TL;DR otomatis',
+            'caption' => 'Konten TL;DR otomatis #IntinyaGini',
         ];
     }
 

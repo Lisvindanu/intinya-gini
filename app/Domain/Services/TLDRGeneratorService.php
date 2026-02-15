@@ -2,6 +2,7 @@
 
 namespace App\Domain\Services;
 
+use App\Domain\Entities\Prompt;
 use App\Domain\Entities\Topic;
 use App\Infrastructure\AI\AIClient;
 
@@ -12,11 +13,16 @@ class TLDRGeneratorService
         private ScriptFormatter $formatter
     ) {}
 
-    public function generate(Topic $topic): array
+    public function generate(Topic $topic, ?string $promptName = null): array
     {
         $startTime = microtime(true);
 
-        $prompt = $this->buildPrompt($topic);
+        // Auto-detect prompt type if not specified
+        if (!$promptName) {
+            $promptName = $this->detectPromptType($topic->title);
+        }
+
+        $prompt = $this->buildPromptFromDB($topic, $promptName);
         $response = $this->aiClient->generate($prompt);
 
         $responseTime = (microtime(true) - $startTime) * 1000;
@@ -29,54 +35,69 @@ class TLDRGeneratorService
                 'model_used' => $response['model'],
                 'tokens_used' => $response['tokens'] ?? null,
                 'response_time' => $responseTime,
+                'prompt_used' => $promptName,
             ],
         ];
     }
 
-    private function buildPrompt(Topic $topic): string
+    private function detectPromptType(string $title): string
     {
+        $title = strtolower($title);
+
+        // Detect drama/gossip keywords
+        $dramaKeywords = ['pelakor', 'selingkuh', 'dibully', 'meludahi', 'skandal', 'gosip', 'drama', 'perceraian', 'respon'];
+        foreach ($dramaKeywords as $keyword) {
+            if (str_contains($title, $keyword)) {
+                return 'tldr_drama';
+            }
+        }
+
+        // Detect tech keywords
+        $techKeywords = ['ai', 'teknologi', 'aplikasi', 'software', 'coding', 'programming', 'developer', 'inovasi', 'algorithm', 'data'];
+        foreach ($techKeywords as $keyword) {
+            if (str_contains($title, $keyword)) {
+                return 'tldr_tech';
+            }
+        }
+
+        // Default to general tldr_v1
+        return 'tldr_v1';
+    }
+
+    private function buildPromptFromDB(Topic $topic, string $promptName): string
+    {
+        $promptTemplate = Prompt::getActive($promptName);
+
+        if (!$promptTemplate) {
+            // Fallback to v1 if prompt not found
+            $promptTemplate = Prompt::getActive('tldr_v1');
+        }
+
+        if (!$promptTemplate) {
+            // Final fallback to hardcoded
+            return $this->buildFallbackPrompt($topic);
+        }
+
+        return $promptTemplate->render([
+            'title' => $topic->title,
+            'duration' => $topic->duration,
+        ]);
+    }
+
+    private function buildFallbackPrompt(Topic $topic): string
+    {
+        // Fallback if DB prompts not available
         return <<<PROMPT
-Kamu adalah AI penulis script konten TL;DR untuk channel bernama "Intinya Gini".
-
-Karakter channel:
-- Santai
-- Langsung ke inti
-- Bahasa Indonesia kasual
-- Insight padat tapi singkat
-
-Hook wajib menggunakan gaya relatable.
-
-WAJIB selalu memasukkan kalimat utama berikut di awal atau akhir:
-"Orang males baca, gue juga males. Jadi gue bacain inti paling penting doang."
-
-Format output:
-1. Hook (1 kalimat)
-2. TL;DR Script (maks 120 kata)
-3. 3 Poin Inti
-4. Judul YouTube Shorts (clickable)
-5. Caption singkat
-
-Gaya bahasa:
-- Tidak terlalu formal
-- Tidak bertele-tele
-- Fokus inti, bukan detail
-
-Jika topik kompleks, sederhanakan tanpa kehilangan makna.
-
----
-
 Topik: {$topic->title}
-Durasi target: {$topic->duration} detik
-Style: Santai tech bro
-Channel: Intinya Gini
+Durasi: {$topic->duration} detik
 
-Buatkan TL;DR sesuai format di atas. Output dalam format JSON dengan struktur:
+Buatkan TL;DR script dalam format JSON dengan struktur:
 {
-    "hook": "string",
-    "content": "string",
-    "key_points": ["string", "string", "string"],
-    "title": "string",
-    "caption": "string"
+    "hook": "...",
+    "content": "Orang males baca, gue juga males. Jadi gue bacain inti paling penting doang. ...",
+    "key_points": [...],
+    "title": "...",
+    "caption": "... #IntinyaGini"
 }
 PROMPT;
     }
