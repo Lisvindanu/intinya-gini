@@ -41,4 +41,8 @@ return [
         'model' => env('OPENROUTER_MODEL', 'meta-llama/llama-3.1-8b-instruct:free'),
     ],
 
+    'newsapi' => [
+        'api_key' => env('NEWSAPI_KEY'),
+    ],
+
 ];

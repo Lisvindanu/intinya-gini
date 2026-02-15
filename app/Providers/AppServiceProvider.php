@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Services\ScriptFormatter;
 use App\Domain\Services\TLDRGeneratorService;
+use App\Domain\Services\TrendingTopicService;
 use App\Infrastructure\AI\AIClient;
 use App\Infrastructure\Repositories\ScriptRepository;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ScriptFormatter::class);
         $this->app->singleton(TLDRGeneratorService::class);
         $this->app->singleton(ScriptRepository::class);
+        $this->app->singleton(TrendingTopicService::class);
     }
 
     /**

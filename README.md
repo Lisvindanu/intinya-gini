@@ -6,11 +6,19 @@ Platform otomatis berbasis AI untuk membuat script TL;DR untuk konten YouTube Sh
 
 ## Features
 
+### Phase 1 (MVP)
 - **AI-Powered Script Generation**: Generate TL;DR scripts otomatis dengan OpenRouter AI
 - **Multiple Export Formats**: Text, Markdown, dan SRT subtitle
 - **Clean Architecture**: Domain-driven design untuk maintainability
 - **Modern UI**: Dark theme dengan TailwindCSS dan Alpine.js
 - **Database Logging**: Track semua generations untuk analytics
+
+### Phase 2 (Trending & Automation)
+- **Trending Topic Scraper**: Auto-fetch trending topics dari Reddit dan News API
+- **Topic Scoring System**: Ranking algorithm untuk prioritas content
+- **Batch Generation**: Generate multiple scripts sekaligus
+- **Scheduled Tasks**: Auto-fetch trending topics every hour
+- **Source Management**: Configure multiple scraping sources
 
 ## Tech Stack
 
@@ -141,6 +149,41 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
+### Trending Topics (Phase 2)
+
+Setup trending topic scraping:
+
+```bash
+# Seed default sources (Reddit, NewsAPI)
+php artisan sources:seed
+
+# Fetch trending topics manually
+php artisan trending:fetch
+
+# Force fetch (ignore interval)
+php artisan trending:fetch --force
+```
+
+Optional NewsAPI configuration in `.env`:
+```env
+NEWSAPI_KEY=your-newsapi-key-here
+```
+
+Get a free NewsAPI key at [newsapi.org](https://newsapi.org)
+
+### Scheduled Tasks
+
+Add to crontab for automatic trending topic fetching:
+
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Or use Laravel's built-in scheduler:
+```bash
+php artisan schedule:work
+```
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
@@ -150,6 +193,8 @@ DB_PASSWORD=
 | GET | `/scripts/{id}` | View script detail |
 | GET | `/scripts/{id}/export/{format}` | Export script (text/markdown/srt) |
 | DELETE | `/scripts/{id}` | Delete script |
+| GET | `/trending` | View trending topics |
+| POST | `/trending/{id}/generate` | Generate script from trending topic |
 
 ## Development
 

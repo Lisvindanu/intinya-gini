@@ -11,11 +11,19 @@
         <nav class="bg-gray-900 border-b border-gray-800">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
-                    <div class="flex items-center">
+                    <div class="flex items-center gap-8">
                         <a href="{{ route('scripts.index') }}" class="flex items-center">
                             <span class="text-2xl font-bold text-white">IG</span>
                             <span class="ml-2 text-sm text-gray-400">intinya gini</span>
                         </a>
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('scripts.index') }}" class="text-sm text-gray-300 hover:text-white transition-colors {{ request()->routeIs('scripts.index') ? 'font-semibold text-accent' : '' }}">
+                                Dashboard
+                            </a>
+                            <a href="{{ route('trending.index') }}" class="text-sm text-gray-300 hover:text-white transition-colors {{ request()->routeIs('trending.*') ? 'font-semibold text-accent' : '' }}">
+                                Trending Topics
+                            </a>
+                        </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <span class="text-xs text-gray-500">AI TL;DR Factory</span>
