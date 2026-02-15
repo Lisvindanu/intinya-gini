@@ -69,7 +69,7 @@ class TrendingTopicService
             $query->where('is_used', false);
         }
 
-        return $query->limit($limit)->get();
+        return $query->paginate($limit);
     }
 
     public function cleanOldTopics(int $daysOld = 7): int
